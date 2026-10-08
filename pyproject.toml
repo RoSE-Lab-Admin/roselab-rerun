@@ -12,4 +12,5 @@ dependencies = [
     "rerun-sdk>=0.37.2",
     "rosbags>=0.11.5",
     "scipy>=1.18.1",
+    "tqdm>=4.70.1",
 ]
