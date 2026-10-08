@@ -1,0 +1,44 @@
+bags:
+  - "../data/perception/091726/merged/merged_bag.mcap_0.mcap"
+
+viewer:
+  blueprint: "./rover_mcap_visualizer.rbl"
+  downsample: 32 # Factor by which to downsample triplets temporally (memory)
+  spatial_type: "3D" # Whether to use proj (orbiting 3D) or ortho (2D locked)
+
+topics:
+  pose: "/FitRosey_V1/pose"
+  imu: "/imu/data"
+  color: "/MastCam/Front/color/image_raw/compressed"
+  color_info: "/MastCam/Front/color/camera_info"
+  depth: "/MastCam/Front/depth/image_rect_raw/compressedDepth"
+  depth_info: "/MastCam/Front/depth/camera_info"
+  extrinsics: "/MastCam/Front/extrinsics/depth_to_color"
+  joints: "/joint_states" # Convert this to dynamic_joint_states
+
+temporal_alignment:
+  method: "slerp"            # Options: "slerp" (linear pos + SLERP rot) or "nearest"
+  max_delta_sec: 0.05        # Maximum allowed timestamp offset (50ms)
+
+overlay:
+  enabled: true
+  alpha: 0.4                 # Opacity of depth overlay (0.0 to 1.0)
+  min_depth_m: 0.2
+  max_depth_m: 5.0
+  colormap: "COLORMAP_JET"   # OpenCV colormaps: COLORMAP_JET, COLORMAP_TURBO, COLORMAP_VIRIDIS
+
+plots:
+  joints:
+    # Additional array fields in dynamic joint state messages to unroll
+    extra_fields: [] # ["motor_currents", "motor_pwm_voltages"]
+
+shim:
+  parent: "world/rover_base"
+  child: "world/rover_base/mastcam_front"
+  translation: [0.25, 0.0, 0.235]  # [x, y, z] in meters
+  rotation_xyzw: [0.541675, 0.541675, 0.454519, 0.454519]  # [x, y, z, w] quaternion
+
+aggregation:
+  enabled: true
+  stride: 1  # Pixel downsample factor for fast point cloud projection
+  max_points: 500000  # Max points stored in aggregated world map

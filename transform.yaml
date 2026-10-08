@@ -1,0 +1,5 @@
+tf:
+  parent: "/FitRosey_V1/pose" # base_link = Rover in the world reference frame
+  child: "/MastCam/Front" # Front_link = Camera in the rover reference frame
+  translation: [0.25, 0.0, 0.235]  # [x, y, z] in meters
+  rotation_xyzw: [0.541675, 0.541675, 0.454519, 0.454519]  # [x, y, z, w] quaternion
