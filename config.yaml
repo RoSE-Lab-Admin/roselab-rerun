@@ -18,13 +18,17 @@ topics:
 
 temporal_alignment:
   method: "slerp"            # Options: "slerp" (linear pos + SLERP rot) or "nearest"
-  max_delta_sec: 0.05        # Maximum allowed timestamp offset (50ms)
+  max_delta_sec: 0.05        # Maximum allowed depth<->color (and "nearest" pose) timestamp offset (50ms)
+  # max_pose_gap_sec: 0.1    # "slerp" only: max spacing of bracketing pose samples (default 2 * max_delta_sec)
+
+depth:                       # Shared by overlay and point cloud / aggregation
+  scale: 0.001               # 16UC1 depth units -> meters (RealSense default: mm)
+  min_m: 0.2
+  max_m: 5.0
 
 overlay:
   enabled: true
   alpha: 0.4                 # Opacity of depth overlay (0.0 to 1.0)
-  min_depth_m: 0.2
-  max_depth_m: 5.0
   colormap: "COLORMAP_JET"   # OpenCV colormaps: COLORMAP_JET, COLORMAP_TURBO, COLORMAP_VIRIDIS
 
 plots:
@@ -40,5 +44,26 @@ shim:
 
 aggregation:
   enabled: true
-  stride: 1  # Pixel downsample factor for fast point cloud projection
-  max_points: 500000  # Max points stored in aggregated world map
+  stride: 1  # Pixel downsample factor (both image axes) for point cloud projection
+  voxel_size: 0.05  # meters
+  keep: "first"  # Per-voxel point/color: "first" observation or "latest"
+  max_points: 500000  # Max voxels in the world map; least-recently-observed are evicted first
+  # occlusion_tol_m: 0.05  # Drop depth points hidden from the color camera (avoids smeared colors)
+
+recon:
+  backend: "tensor"        # tensor: VoxelBlockGrid; legacy: ScalableTSDFVolume (empty volumes in the Open3D 0.20 / py3.14 wheel)
+  device: "CPU:0"          # CPU:0 (or CUDA:0 on GPU nodes)
+  voxel_size: 0.01         # meters
+  sdf_trunc: 0.04          # meters
+  block_resolution: 16
+  block_count: 10000       # Initial capacity; grows on demand. ~82 KB per 16^3 block, per worker
+  weight_threshold: 3.0
+  frame_stride: 1
+  chunk_size: 256          # Frames per chunk volume, flushed to disk then evicted (0 = one global volume)
+  workers: 2               # Chunk worker processes (each holds one chunk volume in memory)
+  undistort_color: true
+  output_dir: "recon_out"
+  save_mesh: true
+  save_point_cloud: true
+  merge_voxel_size: null   # Merged cloud dedup voxel (default: voxel_size)
+  keep_chunks: true
